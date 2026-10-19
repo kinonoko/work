@@ -3,451 +3,789 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>我的專屬小網頁</title>
+  <title>追星用小網頁</title>
   <style>
-    /* ========== 全域與背景設定 ========== */
+    /* ========== 全域與背景設定 (第一版經典風格) ========== */
     :root {
-      --bg-color: #fdf6e3; /* 預設背景色 */
+      --bg-color: #fdf6e3; /* 預設奶油淡黃色 */
+      --primary: #ff8da1;
+      --primary-hover: #ff6b8b;
+      --text-dark: #3a3a3a;
+      --text-muted: #666666;
     }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      min-height: 100vh;
+      padding: 0;
+      font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif;
       background-color: var(--bg-color);
-      transition: background-color 0.5s ease;
-      color: #333;
-    }
-    .container {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 20px;
+      color: var(--text-dark);
+      transition: background-color 0.4s ease;
+      min-height: 100vh;
     }
 
-    /* ========== 玻璃擬物化 (Glassmorphism) 卡片風格 ========== */
-    .glass-card {
-      background: rgba(255, 255, 255, 0.4);
+    .dashboard-container {
+      max-width: 1050px;
+      margin: 0 auto;
+      padding: 25px 20px;
+    }
+
+    /* ========== 玻璃擬物化卡片 ========== */
+    .glass-panel {
+      background: rgba(255, 255, 255, 0.55);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
-      border-radius: 15px;
-      padding: 20px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.5);
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.7);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+      padding: 22px;
     }
 
-    /* ========== 頂部標題與時區 ========== */
-    header {
+    /* ========== 頂部導覽列：標題、雙時區、顏色選擇器 ========== */
+    .top-bar {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 25px;
+      margin-bottom: 24px;
       flex-wrap: wrap;
       gap: 15px;
     }
-    .title-container {
+
+    .title-area {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
     }
-    h1 {
+
+    .title-area h1 {
       margin: 0;
-      padding: 5px 10px;
+      font-size: 1.7rem;
+      padding: 4px 10px;
+      border-radius: 10px;
       outline: none;
       border-bottom: 2px dashed transparent;
-      transition: background 0.3s;
+      transition: all 0.2s;
       cursor: text;
-      border-radius: 10px;
     }
-    h1:focus, h1:hover {
-      background: rgba(255, 255, 255, 0.5);
+
+    .title-area h1:hover,
+    .title-area h1:focus {
+      background: rgba(255, 255, 255, 0.6);
+      border-bottom: 2px dashed var(--primary);
     }
-    .edit-icon {
-      font-size: 1.2em;
+
+    .edit-pen {
+      font-size: 1.2rem;
       cursor: pointer;
       opacity: 0.6;
-      transition: opacity 0.2s;
-    }
-    .edit-icon:hover { opacity: 1; }
-
-    .timezone-widget {
-      display: flex;
-      gap: 15px;
-    }
-    .time-box {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      background: rgba(255, 255, 255, 0.6);
-      padding: 10px 15px;
-      border-radius: 12px;
-      min-width: 120px;
-    }
-    .tz-label { font-size: 0.9em; color: #666; }
-    .tz-select { border: none; background: transparent; font-size: 0.9em; color: #666; outline: none; cursor: pointer; text-align: center; font-family: inherit;}
-    .tz-time { font-size: 1.3em; font-weight: bold; margin-top: 5px; letter-spacing: 1px;}
-
-    /* ========== 主要網格排版 ========== */
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      gap: 20px;
-    }
-    .card {
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-    }
-    .card h2 {
-      margin-top: 0;
-      border-bottom: 2px solid rgba(255, 182, 193, 0.6);
-      padding-bottom: 10px;
-      font-size: 1.2em;
-    }
-
-    /* ========== 表單與按鈕 ========== */
-    input, select, button, textarea {
-      border: 1px solid rgba(0,0,0,0.1);
-      border-radius: 8px;
-      padding: 8px 12px;
-      font-family: inherit;
-      font-size: 1em;
-      outline: none;
-      background: rgba(255, 255, 255, 0.8);
-    }
-    input:focus, textarea:focus { border-color: #ffb6c1; }
-    button {
-      background: #ffd1dc;
-      cursor: pointer;
       transition: 0.2s;
-      font-weight: bold;
-      color: #333;
+      user-select: none;
     }
-    button:hover { background: #ffb6c1; transform: translateY(-2px); }
-    .add-action { display: flex; gap: 8px; margin-top: auto; padding-top: 15px; }
-    .add-action input { flex: 1; min-width: 0; }
 
-    /* ========== 列表項目 (倒數、行程) ========== */
-    .list-container { flex: 1; overflow-y: auto; max-height: 250px; margin-bottom: 10px; padding-right: 5px;}
-    .list-container::-webkit-scrollbar { width: 6px; }
-    .list-container::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 10px; }
-    .item-row {
+    .edit-pen:hover {
+      opacity: 1;
+      transform: scale(1.1);
+    }
+
+    .top-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .clock-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.75);
+      padding: 8px 14px;
+      border-radius: 14px;
+      font-size: 0.9rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+    }
+
+    .clock-time {
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: #d6336c;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .tz-dropdown {
+      border: none;
+      background: transparent;
+      font-family: inherit;
+      font-size: 0.9rem;
+      color: var(--text-dark);
+      font-weight: 600;
+      cursor: pointer;
+      outline: none;
+      padding: 0;
+    }
+
+    .color-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.75);
+      padding: 6px 12px;
+      border-radius: 14px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .color-pill input[type="color"] {
+      border: none;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      cursor: pointer;
+      background: transparent;
+      padding: 0;
+    }
+    .color-pill input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+    .color-pill input[type="color"]::-webkit-color-swatch { border: 2px solid #fff; border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+
+    /* ========== 經典雙欄網格排版 ========== */
+    .bento-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 22px;
+    }
+
+    .full-width {
+      grid-column: 1 / -1;
+    }
+
+    .card-header {
+      margin-top: 0;
+      margin-bottom: 16px;
+      font-size: 1.15rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 2px solid rgba(255, 141, 161, 0.35);
+      padding-bottom: 10px;
+    }
+
+    /* ========== 1. 經典大倒數計時器看板 ========== */
+    .countdown-hero {
+      background: linear-gradient(135deg, rgba(255, 182, 193, 0.45), rgba(255, 218, 224, 0.7));
+      border-radius: 16px;
+      padding: 20px;
+      text-align: center;
+      margin-bottom: 15px;
+      border: 1px solid rgba(255, 255, 255, 0.8);
+    }
+
+    .cd-event-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #c2255c;
+      margin-bottom: 12px;
+    }
+
+    .cd-boxes {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .cd-unit {
+      background: rgba(255, 255, 255, 0.85);
+      padding: 10px 14px;
+      border-radius: 12px;
+      min-width: 72px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
+    }
+
+    .cd-num {
+      font-size: 1.65rem;
+      font-weight: 800;
+      color: #d6336c;
+      display: block;
+      line-height: 1.2;
+    }
+
+    .cd-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    /* ========== 表單與輸入框列 ========== */
+    .input-row {
+      display: flex;
+      gap: 8px;
+      margin-top: auto;
+    }
+
+    input[type="text"],
+    input[type="date"],
+    input[type="datetime-local"],
+    textarea {
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      border-radius: 10px;
+      padding: 9px 12px;
+      font-family: inherit;
+      font-size: 0.92rem;
+      background: rgba(255, 255, 255, 0.8);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input:focus, textarea:focus {
+      border-color: var(--primary);
+      background: #fff;
+    }
+
+    .input-row input {
+      flex: 1;
+      min-width: 0;
+    }
+
+    button {
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 9px 16px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    button:hover {
+      background: var(--primary-hover);
+      transform: translateY(-2px);
+    }
+
+    /* ========== 2. 行程與賽事列表 ========== */
+    .schedule-list {
+      max-height: 195px;
+      overflow-y: auto;
+      margin-bottom: 14px;
+      padding-right: 4px;
+    }
+
+    .schedule-item {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: rgba(255, 255, 255, 0.5);
-      margin-bottom: 10px;
-      padding: 12px;
-      border-radius: 10px;
-      transition: 0.2s;
+      background: rgba(255, 255, 255, 0.65);
+      padding: 10px 14px;
+      border-radius: 12px;
+      margin-bottom: 8px;
+      border-left: 4px solid var(--primary);
     }
-    .item-row:hover { background: rgba(255, 255, 255, 0.8); }
-    .cd-days { font-weight: bold; color: #ff6b81; font-size: 1.1em; margin-right: 10px;}
-    .delete-btn { background: #ffcccb; color: #c0392b; border: none; padding: 4px 10px; border-radius: 6px; font-size: 0.8em; }
-    .delete-btn:hover { background: #ff4757; color: white; }
-    
-    /* ========== 書籤 (還原成膠囊按鈕排版) ========== */
-    .bookmark-wrapper { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px; }
-    .bm-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: rgba(255, 255, 255, 0.7);
-      padding: 8px 15px;
-      border-radius: 20px;
-      text-decoration: none;
-      color: #333;
-      font-weight: bold;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-      transition: 0.2s;
-    }
-    .bm-pill:hover { background: #ffd1dc; transform: translateY(-2px); }
-    .bm-del {
-      background: transparent; border: none; color: #999; padding: 0; font-size: 1.2em; line-height: 1; margin-left: 5px; border-radius: 50%; width: 20px; height: 20px;
-    }
-    .bm-del:hover { color: #c0392b; background: rgba(255,0,0,0.1); }
 
-    /* ========== 播放器 ========== */
-    .player-wrapper { display: flex; flex-direction: column; gap: 10px; height: 100%;}
-    iframe { border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); flex: 1; min-height: 180px; }
-    
-    /* ========== 備忘錄 ========== */
-    textarea { width: 100%; resize: none; min-height: 180px; box-sizing: border-box; background: rgba(255,255,255,0.6); line-height: 1.5; }
+    .sch-info strong {
+      display: block;
+      font-size: 0.95rem;
+    }
 
-    /* ========== 右下角主題調色盤 ========== */
-    .theme-picker {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      background: rgba(255, 255, 255, 0.8);
-      padding: 10px 15px;
-      border-radius: 25px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-      backdrop-filter: blur(10px);
+    .sch-info small {
+      color: var(--text-muted);
+      font-size: 0.82rem;
+    }
+
+    .del-btn {
+      background: rgba(255, 107, 129, 0.15);
+      color: #c0392b;
+      padding: 4px 9px;
+      font-size: 0.8rem;
+      border-radius: 8px;
+    }
+
+    .del-btn:hover {
+      background: #ff4757;
+      color: #fff;
+    }
+
+    /* ========== 3. 常用書籤 (第一版經典卡片網格) ========== */
+    .bookmark-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 15px;
+      max-height: 195px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .bm-card {
       display: flex;
       align-items: center;
-      gap: 10px;
-      z-index: 1000;
+      justify-content: space-between;
+      background: rgba(255, 255, 255, 0.7);
+      padding: 10px 14px;
+      border-radius: 12px;
+      transition: all 0.2s;
+      border: 1px solid rgba(255, 255, 255, 0.9);
     }
-    .theme-picker input[type="color"] { border: none; padding: 0; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; background: transparent; }
-    .theme-picker input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
-    .theme-picker input[type="color"]::-webkit-color-swatch { border: none; border-radius: 50%; }
 
+    .bm-card:hover {
+      background: #ffffff;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    }
+
+    .bm-card a {
+      text-decoration: none;
+      color: var(--text-dark);
+      font-weight: 600;
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+    }
+
+    .bm-card a:hover {
+      color: #d6336c;
+    }
+
+    .bm-remove {
+      background: transparent;
+      color: #999;
+      padding: 2px 6px;
+      font-size: 1rem;
+      border-radius: 6px;
+    }
+
+    .bm-remove:hover {
+      background: rgba(255, 71, 87, 0.15);
+      color: #ff4757;
+      transform: none;
+    }
+
+    /* ========== 4. 音樂播放器 ========== */
+    .player-box {
+      width: 100%;
+      height: 185px;
+      border-radius: 14px;
+      overflow: hidden;
+      background: #000;
+      margin-bottom: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    .player-box iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    .player-helper {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+
+    .player-helper a {
+      color: #d6336c;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .player-helper a:hover {
+      text-decoration: underline;
+    }
+
+    /* ========== 5. 快速備忘錄 ========== */
+    textarea#quick-note {
+      width: 100%;
+      height: 150px;
+      resize: vertical;
+      line-height: 1.6;
+    }
+
+    /* 手機版自適應 */
     @media (max-width: 768px) {
-      .timezone-widget { width: 100%; justify-content: space-between; }
-      .time-box { flex: 1; }
+      .bento-grid {
+        grid-template-columns: 1fr;
+      }
+      .top-bar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <!-- 頂部：標題與時鐘 -->
-    <header class="glass-card">
-      <div class="title-container">
-        <h1 contenteditable="true" id="dashboard-title">追星用小網頁</h1>
-        <span class="edit-icon" onclick="document.getElementById('dashboard-title').focus()" title="點擊更改標題">✏️</span>
+
+  <div class="dashboard-container">
+    <!-- 頂部：可編輯標題 + 國家時區 + 背景調色盤 -->
+    <header class="top-bar glass-panel">
+      <div class="title-area">
+        <h1 id="app-title" contenteditable="true" spellcheck="false">追星用小網頁</h1>
+        <span class="edit-pen" id="edit-title-btn" title="點擊修改標題">✏️</span>
       </div>
-      <div class="timezone-widget">
-        <div class="time-box">
-          <span class="tz-label">台灣時間</span>
-          <span class="tz-time" id="local-time">00:00:00</span>
+
+      <div class="top-controls">
+        <div class="clock-pill">
+          <span>🇹🇼 台灣</span>
+          <span class="clock-time" id="tw-clock">00:00:00</span>
         </div>
-        <div class="time-box">
-          <select id="tz-select" class="tz-select">
-            <option value="Asia/Seoul">韓國時間 (KST)</option>
-            <option value="Asia/Tokyo">日本時間 (JST)</option>
-            <option value="America/New_York">美東時間 (EST)</option>
-            <option value="Europe/London">英國時間 (GMT)</option>
+
+        <div class="clock-pill">
+          <select id="tz-selector" class="tz-dropdown" title="切換國家時區">
+            <option value="Asia/Seoul">🇰🇷 韓國 (KST)</option>
+            <option value="Asia/Tokyo">🇯🇵 日本 (JST)</option>
+            <option value="America/New_York">🇺🇸 美東 (EST)</option>
+            <option value="America/Los_Angeles">🇺🇸 美西 (PST)</option>
+            <option value="Europe/London">🇬🇧 英國 (GMT)</option>
           </select>
-          <span class="tz-time" id="other-time">00:00:00</span>
+          <span class="clock-time" id="world-clock">00:00:00</span>
         </div>
+
+        <label class="color-pill" title="自由切換背景顏色">
+          <span>🎨 主題色</span>
+          <input type="color" id="bg-picker" value="#fdf6e3">
+        </label>
       </div>
     </header>
 
-    <div class="grid">
-      <!-- 1. 倒數計時 -->
-      <section class="card glass-card">
-        <h2>🎂 重要倒數</h2>
-        <div class="list-container" id="countdown-list"></div>
-        <div class="add-action">
-          <input type="text" id="cd-name" placeholder="加入重要日期">
-          <input type="date" id="cd-date">
-          <button id="add-cd-btn">新增</button>
-        </div>
-      </section>
+    <!-- 主內容區 (經典雙欄排版) -->
+    <main class="bento-grid">
 
-      <!-- 2. 行程與賽事 -->
-      <section class="card glass-card">
-        <h2>📅 行程與賽事</h2>
-        <div class="list-container" id="schedule-list"></div>
-        <div class="add-action">
-          <input type="text" id="sch-name" placeholder="例如: T1 轉播 / PLAVE 直播">
-          <input type="datetime-local" id="sch-date">
-          <button id="add-sch-btn">新增</button>
-        </div>
-      </section>
-
-      <!-- 3. 常用傳送門 (按鈕排版) -->
-      <section class="card glass-card">
-        <h2>📌 常用傳送門</h2>
-        <div class="bookmark-wrapper" id="bookmark-list"></div>
-        <div class="add-action" style="margin-top: auto;">
-          <input type="text" id="bm-name" placeholder="標題">
-          <input type="text" id="bm-url" placeholder="網址 (https://...)">
-          <button id="add-bm-btn">新增</button>
-        </div>
-      </section>
-
-      <!-- 4. 音樂播放器 (可輸入網址更換) -->
-      <section class="card glass-card">
-        <h2>🎵 陪伴播放器</h2>
-        <div class="player-wrapper">
-          <iframe id="yt-iframe" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-          <div class="add-action" style="padding-top: 5px;">
-            <input type="text" id="yt-input" placeholder="貼上 YouTube 影片網址來換歌...">
-            <button id="change-yt-btn">播放</button>
+      <!-- 1. 重要日子倒數計時器 -->
+      <section class="glass-panel" style="display:flex; flex-direction:column;">
+        <h2 class="card-header">🎂 重要日子倒數</h2>
+        <div class="countdown-hero">
+          <div class="cd-event-title" id="cd-display-title">加入重要日期</div>
+          <div class="cd-boxes">
+            <div class="cd-unit">
+              <span class="cd-num" id="cd-d">--</span>
+              <span class="cd-label">天</span>
+            </div>
+            <div class="cd-unit">
+              <span class="cd-num" id="cd-h">--</span>
+              <span class="cd-label">時</span>
+            </div>
+            <div class="cd-unit">
+              <span class="cd-num" id="cd-m">--</span>
+              <span class="cd-label">分</span>
+            </div>
+            <div class="cd-unit">
+              <span class="cd-num" id="cd-s">--</span>
+              <span class="cd-label">秒</span>
+            </div>
           </div>
         </div>
+        <div class="input-row">
+          <input type="text" id="cd-input-name" placeholder="加入重要日期">
+          <input type="date" id="cd-input-date">
+          <button id="cd-save-btn">設定</button>
+        </div>
       </section>
 
-      <!-- 5. 隨手記 -->
-      <section class="card glass-card" style="grid-column: 1 / -1;">
-        <h2>📝 靈感與備忘錄</h2>
-        <textarea id="quick-note" placeholder="記錄一下突然冒出的腦洞、日文報告的想法，或是想買的清單吧..."></textarea>
+      <!-- 2. 可編輯行事曆 -->
+      <section class="glass-panel" style="display:flex; flex-direction:column;">
+        <h2 class="card-header">📅 賽程與直播行事曆</h2>
+        <div class="schedule-list" id="schedule-container"></div>
+        <div class="input-row">
+          <input type="text" id="sch-input-name" placeholder="輸入行程或賽事...">
+          <input type="datetime-local" id="sch-input-time">
+          <button id="sch-add-btn">新增</button>
+        </div>
       </section>
-    </div>
 
-    <!-- 右下角背景顏色控制 -->
-    <div class="theme-picker">
-      <label for="bg-color" style="font-weight:bold; color:#555;">🎨 背景色</label>
-      <input type="color" id="bg-color" value="#fdf6e3">
-    </div>
+      <!-- 3. 常用書籤 (第一版經典卡片樣式) -->
+      <section class="glass-panel" style="display:flex; flex-direction:column;">
+        <h2 class="card-header">📌 常用書籤傳送門</h2>
+        <div class="bookmark-grid" id="bookmark-container"></div>
+        <div class="input-row">
+          <input type="text" id="bm-input-title" placeholder="網站名稱 (例: AO3)">
+          <input type="text" id="bm-input-url" placeholder="網址 (https://...)">
+          <button id="bm-add-btn">新增</button>
+        </div>
+      </section>
+
+      <!-- 4. BGM 音樂播放器 -->
+      <section class="glass-panel" style="display:flex; flex-direction:column;">
+        <h2 class="card-header">🎵 BGM 音樂播放器</h2>
+        <div class="player-box">
+          <iframe id="yt-player" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        </div>
+        <div class="player-helper">
+          <span>💡 可貼上 YouTube 網址，或輸入歌名直接搜尋</span>
+          <a id="yt-direct-link" href="https://music.youtube.com" target="_blank">🔗 在 YouTube Music 開啟</a>
+        </div>
+        <div class="input-row">
+          <input type="text" id="yt-input" placeholder="貼上 YouTube 網址，或輸入想搜尋的歌名...">
+          <button id="yt-load-btn">播放 / 搜尋</button>
+        </div>
+      </section>
+
+      <!-- 5. 快速備忘錄 (底部跨雙欄) -->
+      <section class="glass-panel full-width">
+        <h2 class="card-header">📝 快速備忘錄 & 腦洞靈感紀錄</h2>
+        <textarea id="quick-note" placeholder="隨手寫下看直播的心得、突然冒出的寫作腦洞，或是日常待辦清單吧！（打字會自動儲存喔✨）"></textarea>
+      </section>
+
+    </main>
   </div>
 
   <script>
-    /* ========== 共用功能 ========== */
-    const el = (id) => document.getElementById(id);
-    const save = (key, data) => localStorage.setItem(key, JSON.stringify(data));
-    const load = (key, defaultVal) => JSON.parse(localStorage.getItem(key)) || defaultVal;
+    const $ = (id) => document.getElementById(id);
 
-    /* ========== 1. 標題與備忘錄自動儲存 ========== */
-    const titleEl = el('dashboard-title');
-    titleEl.textContent = localStorage.getItem('dashTitle') || '追星用小網頁';
-    titleEl.addEventListener('blur', () => localStorage.setItem('dashTitle', titleEl.textContent));
+    /* ========== 1. 可編輯標題 + 鉛筆按鈕 ========== */
+    const titleEl = $('app-title');
+    const editBtn = $('edit-title-btn');
 
-    const noteEl = el('quick-note');
-    noteEl.value = localStorage.getItem('quickNote') || '';
-    noteEl.addEventListener('input', () => localStorage.setItem('quickNote', noteEl.value));
+    titleEl.textContent = localStorage.getItem('custom_title') || '追星用小網頁';
 
-    /* ========== 2. 背景顏色控制 ========== */
-    const colorPicker = el('bg-color');
-    const savedColor = localStorage.getItem('bgColor') || '#fdf6e3';
-    colorPicker.value = savedColor;
-    document.documentElement.style.setProperty('--bg-color', savedColor);
-    colorPicker.addEventListener('input', (e) => {
-      document.documentElement.style.setProperty('--bg-color', e.target.value);
-      localStorage.setItem('bgColor', e.target.value);
+    titleEl.addEventListener('blur', () => {
+      const val = titleEl.textContent.trim() || '追星用小網頁';
+      titleEl.textContent = val;
+      localStorage.setItem('custom_title', val);
+      document.title = val;
     });
 
-    /* ========== 3. 雙時區時鐘 ========== */
-    const tzSelect = el('tz-select');
-    tzSelect.value = localStorage.getItem('selectedTz') || 'Asia/Seoul';
-    tzSelect.addEventListener('change', (e) => localStorage.setItem('selectedTz', e.target.value));
+    titleEl.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        titleEl.blur();
+      }
+    });
+
+    editBtn.addEventListener('click', () => {
+      titleEl.focus();
+      const range = document.createRange();
+      range.selectNodeContents(titleEl);
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+    });
+
+    /* ========== 2. 雙時區時鐘 (可自由切換國家) ========== */
+    const tzSelector = $('tz-selector');
+    tzSelector.value = localStorage.getItem('selected_tz') || 'Asia/Seoul';
+
+    tzSelector.addEventListener('change', () => {
+      localStorage.setItem('selected_tz', tzSelector.value);
+      updateClocks();
+    });
 
     function updateClocks() {
       const now = new Date();
-      el('local-time').textContent = now.toLocaleTimeString('zh-TW', { hour12: false });
-      const otherTimeStr = new Intl.DateTimeFormat('zh-TW', {
-        timeZone: tzSelect.value,
+      $('tw-clock').textContent = new Intl.DateTimeFormat('zh-TW', {
+        timeZone: 'Asia/Taipei',
         hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
       }).format(now);
-      el('other-time').textContent = otherTimeStr;
+
+      $('world-clock').textContent = new Intl.DateTimeFormat('zh-TW', {
+        timeZone: tzSelector.value,
+        hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+      }).format(now);
     }
     setInterval(updateClocks, 1000);
     updateClocks();
 
-    /* ========== 4. YouTube 播放器邏輯 ========== */
-    // 預設一首輕柔的 Lofi 音樂，如果有存過就用存過的
-    const defaultVideoId = 'jfKfPfyJRdk'; 
-    const savedVideoId = localStorage.getItem('ytVideoId') || defaultVideoId;
-    el('yt-iframe').src = `https://www.youtube.com/embed/${savedVideoId}`;
+    /* ========== 3. 主題背景顏色切換 ========== */
+    const bgPicker = $('bg-picker');
+    const savedBg = localStorage.getItem('custom_bg') || '#fdf6e3';
+    bgPicker.value = savedBg;
+    document.documentElement.style.setProperty('--bg-color', savedBg);
 
-    el('change-yt-btn').addEventListener('click', () => {
-      const url = el('yt-input').value;
-      // 擷取 YouTube 網址中的影片 ID
-      const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-      const match = url.match(regExp);
-      if (match && match[2].length === 11) {
-        const videoId = match[2];
-        el('yt-iframe').src = `https://www.youtube.com/embed/${videoId}`;
-        localStorage.setItem('ytVideoId', videoId);
-        el('yt-input').value = '';
-      } else {
-        alert('哎呀！好像不是有效的 YouTube 網址喔，請重新確認一下！');
+    bgPicker.addEventListener('input', (e) => {
+      document.documentElement.style.setProperty('--bg-color', e.target.value);
+      localStorage.setItem('custom_bg', e.target.value);
+    });
+
+    /* ========== 4. 重要日子倒數計時器 ========== */
+    let cdData = JSON.parse(localStorage.getItem('cd_target')) || {
+      title: '加入重要日期',
+      date: ''
+    };
+
+    function updateCountdown() {
+      $('cd-display-title').textContent = cdData.title || '加入重要日期';
+      if (!cdData.date) {
+        $('cd-d').textContent = '--';$('cd-h').textContent = '--';
+        $('cd-m').textContent = '--';$('cd-s').textContent = '--';
+        return;
       }
+
+      const now = new Date();
+      const target = new Date(cdData.date + 'T00:00:00');
+      const diff = target - now;
+
+      if (diff <= 0) {
+        $('cd-d').textContent = '0';$('cd-h').textContent = '0';
+        $('cd-m').textContent = '0';$('cd-s').textContent = '0';
+        return;
+      }
+
+      const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
+      const m = Math.floor((diff / 1000 / 60) % 60);
+      const s = Math.floor((diff / 1000) % 60);
+
+      $('cd-d').textContent = d;
+      $('cd-h').textContent = String(h).padStart(2, '0');
+      $('cd-m').textContent = String(m).padStart(2, '0');$('cd-s').textContent = String(s).padStart(2, '0');
+    }
+
+    $('cd-save-btn').addEventListener('click', () => {
+      const nameVal = $('cd-input-name').value.trim() || '加入重要日期';
+      const dateVal = $('cd-input-date').value;
+      if (!dateVal) return alert('請先選擇一個日期喔！');
+
+      cdData = { title: nameVal, date: dateVal };
+      localStorage.setItem('cd_target', JSON.stringify(cdData));
+      $('cd-input-name').value = '';$('cd-input-date').value = '';
+      updateCountdown();
     });
 
-    /* ========== 5. 清單資料管理 (倒數、行程、書籤) ========== */
-    let countdowns = load('countdowns', []);
-    let schedules = load('schedules', []);
-    let bookmarks = load('bookmarks', [
-      { name: 'AO3', url: 'https://archiveofourown.org' },
-      { name: 'Twitch', url: 'https://www.twitch.tv' },
-      { name: 'YouTube', url: 'https://www.youtube.com' }
-    ]);
+    setInterval(updateCountdown, 1000);
+    updateCountdown();
 
-    function refreshAllLists() {
-      save('countdowns', countdowns);
-      save('schedules', schedules);
-      save('bookmarks', bookmarks);
+    /* ========== 5. 賽程與直播行事曆 ========== */
+    let schedules = JSON.parse(localStorage.getItem('my_schedules')) || [];
 
-      // 渲染倒數計時
-      const cdContainer = el('countdown-list');
-      cdContainer.innerHTML = '';
-      const today = new Date();
-      today.setHours(0,0,0,0);
-      countdowns.sort((a,b) => new Date(a.date) - new Date(b.date)).forEach((cd, i) => {
-        const targetDate = new Date(cd.date);
-        const diffDays = Math.ceil((targetDate - today) / (1000 * 60 * 60 * 24));
-        let text = diffDays > 0 ? `還有 ${diffDays} 天` : diffDays === 0 ? '就是今天！🎉' : `已過 ${Math.abs(diffDays)} 天`;
-        
-        cdContainer.insertAdjacentHTML('beforeend', `
-          <div class="item-row">
-            <span>${cd.name}</span>
-            <div>
-              <span class="cd-days">${text}</span>
-              <button class="delete-btn" onclick="deleteItem('cd', ${i})">刪除</button>
+    function renderSchedules() {
+      localStorage.setItem('my_schedules', JSON.stringify(schedules));
+      const container = $('schedule-container');
+      container.innerHTML = '';
+
+      if (schedules.length === 0) {
+        container.innerHTML = '<div style="text-align:center; color:#888; padding:25px 0;">目前還沒有行程，趕快從下方新增吧 ✨</div>';
+        return;
+      }
+
+      schedules.sort((a, b) => new Date(a.time) - new Date(b.time)).forEach((item, idx) => {
+        const dt = new Date(item.time);
+        const formatted = dt.toLocaleString('zh-TW', {
+          month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false
+        });
+        container.insertAdjacentHTML('beforeend', `
+          <div class="schedule-item">
+            <div class="sch-info">
+              <strong>${item.name}</strong>
+              <small>🕒 ${formatted}</small>
             </div>
-          </div>
-        `);
-      });
-
-      // 渲染行程表
-      const schContainer = el('schedule-list');
-      schContainer.innerHTML = '';
-      schedules.sort((a,b) => new Date(a.date) - new Date(b.date)).forEach((sch, i) => {
-        const d = new Date(sch.date);
-        const timeStr = d.toLocaleString('zh-TW', {month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit', hour12: false});
-        schContainer.insertAdjacentHTML('beforeend', `
-          <div class="item-row">
-            <div>
-              <strong>${sch.name}</strong><br>
-              <small style="color:#666;">${timeStr}</small>
-            </div>
-            <button class="delete-btn" onclick="deleteItem('sch', ${i})">刪除</button>
-          </div>
-        `);
-      });
-
-      // 渲染書籤 (膠囊按鈕排版)
-      const bmContainer = el('bookmark-list');
-      bmContainer.innerHTML = '';
-      bookmarks.forEach((bm, i) => {
-        bmContainer.insertAdjacentHTML('beforeend', `
-          <div class="bm-pill">
-            <a href="${bm.url}" target="_blank" style="text-decoration:none; color:inherit;">🔗 ${bm.name}</a>
-            <button class="bm-del" onclick="deleteItem('bm', ${i})" title="刪除">×</button>
+            <button class="del-btn" onclick="removeSchedule(${idx})">刪除</button>
           </div>
         `);
       });
     }
 
-    window.deleteItem = function(type, index) {
-      if(type === 'cd') countdowns.splice(index, 1);
-      if(type === 'sch') schedules.splice(index, 1);
-      if(type === 'bm') bookmarks.splice(index, 1);
-      refreshAllLists();
+    window.removeSchedule = (idx) => {
+      schedules.splice(idx, 1);
+      renderSchedules();
+    };
+
+    $('sch-add-btn').addEventListener('click', () => {
+      const name = $('sch-input-name').value.trim();
+      const time = $('sch-input-time').value;
+      if (!name || !time) return alert('請輸入行程名稱與時間喔！');
+      schedules.push({ name, time });
+      $('sch-input-name').value = '';$('sch-input-time').value = '';
+      renderSchedules();
+    });
+
+    renderSchedules();
+
+    /* ========== 6. 常用書籤傳送門 (第一版經典卡片樣式) ========== */
+    let bookmarks = JSON.parse(localStorage.getItem('my_bookmarks')) || [
+      { title: 'YouTube', url: 'https://www.youtube.com' },
+      { title: 'Twitch 直播', url: 'https://www.twitch.tv' },
+      { title: 'Weverse', url: 'https://weverse.io' },
+      { title: 'AO3 創作庫', url: 'https://archiveofourown.org' }
+    ];
+
+    function renderBookmarks() {
+      localStorage.setItem('my_bookmarks', JSON.stringify(bookmarks));
+      const container = $('bookmark-container');
+      container.innerHTML = '';
+
+      bookmarks.forEach((bm, idx) => {
+        container.insertAdjacentHTML('beforeend', `
+          <div class="bm-card">
+            <a href="${bm.url}" target="_blank" rel="noopener">🔗 ${bm.title}</a>
+            <button class="bm-remove" onclick="removeBookmark(${idx})" title="刪除書籤">✕</button>
+          </div>
+        `);
+      });
     }
 
-    /* 新增按鈕事件 */
-    el('add-cd-btn').addEventListener('click', () => {
-      const name = el('cd-name').value || '加入重要日期';
-      const date = el('cd-date').value;
-      if(!date) return alert('請選擇日期喔！');
-      countdowns.push({name, date});
-      el('cd-name').value = ''; el('cd-date').value = '';
-      refreshAllLists();
+    window.removeBookmark = (idx) => {
+      bookmarks.splice(idx, 1);
+      renderBookmarks();
+    };
+
+    $('bm-add-btn').addEventListener('click', () => {
+      const title = $('bm-input-title').value.trim();
+      let url = $('bm-input-url').value.trim();
+      if (!title || !url) return alert('請輸入書籤名稱和網址喔！');
+      if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+      bookmarks.push({ title, url });
+      $('bm-input-title').value = '';$('bm-input-url').value = '';
+      renderBookmarks();
     });
 
-    el('add-sch-btn').addEventListener('click', () => {
-      const name = el('sch-name').value;
-      const date = el('sch-date').value;
-      if(!name || !date) return alert('名稱和時間都要填寫喔！');
-      schedules.push({name, date});
-      el('sch-name').value = ''; el('sch-date').value = '';
-      refreshAllLists();
+    renderBookmarks();
+
+    /* ========== 7. BGM 音樂播放器 (支援網址播放與關鍵字搜尋) ========== */
+    // 預設使用無版權限制、允許外部嵌入播放的 Lofi Girl 直播台
+    const defaultVid = 'jfKfPfyJRdk';
+    let currentVid = localStorage.getItem('saved_yt_id') || defaultVid;
+
+    function loadVideo(id) {
+      $('yt-player').src = `https://www.youtube.com/embed/${id}`;
+      $('yt-direct-link').href = `https://www.youtube.com/watch?v=${id}`;
+    }
+    loadVideo(currentVid);
+
+    function handlePlayerInput() {
+      const val = $('yt-input').value.trim();
+      if (!val) return;
+
+      // 檢查是否為 YouTube 影片或播放清單網址
+      const ytRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?|live)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
+      const match = val.match(ytRegex);
+
+      if (match && match[1]) {
+        currentVid = match[1];
+        localStorage.setItem('saved_yt_id', currentVid);
+        loadVideo(currentVid);
+        $('yt-input').value = '';
+      } else if (/^https?:\/\//i.test(val)) {
+        // 如果是其他音樂網站的網址，直接幫使用者在新分頁打開
+        window.open(val, '_blank');
+        $('yt-input').value = '';
+      } else {
+        // 如果輸入的是歌名或歌手關鍵字，直接打開 YouTube 搜尋結果
+        window.open(`https://www.youtube.com/results?search_query=${encodeURIComponent(val)}`, '_blank');
+        $('yt-input').value = '';
+      }
+    }
+
+    $('yt-load-btn').addEventListener('click', handlePlayerInput);$('yt-input').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') handlePlayerInput();
     });
 
-    el('add-bm-btn').addEventListener('click', () => {
-      const name = el('bm-name').value;
-      let url = el('bm-url').value;
-      if(!name || !url) return alert('名稱和網址都要填寫喔！');
-      if(!url.startsWith('http')) url = 'https://' + url;
-      bookmarks.push({name, url});
-      el('bm-name').value = ''; el('bm-url').value = '';
-      refreshAllLists();
+    /* ========== 8. 快速備忘錄 ========== */
+    const noteArea = $('quick-note');
+    noteArea.value = localStorage.getItem('saved_quick_note') || '';
+    noteArea.addEventListener('input', () => {
+      localStorage.setItem('saved_quick_note', noteArea.value);
     });
-
-    // 初始化渲染
-    refreshAllLists();
   </script>
 </body>
 </html>
