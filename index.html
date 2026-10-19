@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>我的追星用專屬小網頁</title>
+  <title>我的專屬小網頁</title>
   <style>
     /* ========== 全域與背景設定 ========== */
     :root {
@@ -43,19 +43,31 @@
       flex-wrap: wrap;
       gap: 15px;
     }
+    .title-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
     h1 {
       margin: 0;
       padding: 5px 10px;
       outline: none;
       border-bottom: 2px dashed transparent;
-      transition: border-color 0.3s;
+      transition: background 0.3s;
       cursor: text;
-    }
-    h1:focus, h1:hover {
-      border-bottom: 2px dashed #ffb6c1;
-      background: rgba(255, 255, 255, 0.3);
       border-radius: 10px;
     }
+    h1:focus, h1:hover {
+      background: rgba(255, 255, 255, 0.5);
+    }
+    .edit-icon {
+      font-size: 1.2em;
+      cursor: pointer;
+      opacity: 0.6;
+      transition: opacity 0.2s;
+    }
+    .edit-icon:hover { opacity: 1; }
+
     .timezone-widget {
       display: flex;
       gap: 15px;
@@ -113,7 +125,7 @@
     .add-action { display: flex; gap: 8px; margin-top: auto; padding-top: 15px; }
     .add-action input { flex: 1; min-width: 0; }
 
-    /* ========== 列表項目 (倒數、行程、書籤) ========== */
+    /* ========== 列表項目 (倒數、行程) ========== */
     .list-container { flex: 1; overflow-y: auto; max-height: 250px; margin-bottom: 10px; padding-right: 5px;}
     .list-container::-webkit-scrollbar { width: 6px; }
     .list-container::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 10px; }
@@ -132,15 +144,32 @@
     .delete-btn { background: #ffcccb; color: #c0392b; border: none; padding: 4px 10px; border-radius: 6px; font-size: 0.8em; }
     .delete-btn:hover { background: #ff4757; color: white; }
     
-    /* 書籤特別排版 */
-    .bookmark-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .bm-link { text-decoration: none; color: #333; font-weight: bold; display: flex; align-items: center; gap: 5px; word-break: break-all;}
-    .bm-link:hover { color: #ff6b81; }
+    /* ========== 書籤 (還原成膠囊按鈕排版) ========== */
+    .bookmark-wrapper { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px; }
+    .bm-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.7);
+      padding: 8px 15px;
+      border-radius: 20px;
+      text-decoration: none;
+      color: #333;
+      font-weight: bold;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+      transition: 0.2s;
+    }
+    .bm-pill:hover { background: #ffd1dc; transform: translateY(-2px); }
+    .bm-del {
+      background: transparent; border: none; color: #999; padding: 0; font-size: 1.2em; line-height: 1; margin-left: 5px; border-radius: 50%; width: 20px; height: 20px;
+    }
+    .bm-del:hover { color: #c0392b; background: rgba(255,0,0,0.1); }
 
-    /* ========== 搜尋列與備忘錄 ========== */
-    .search-container { display: flex; gap: 10px; align-items: center; height: 100%;}
-    .search-container input { flex: 1; padding: 15px; font-size: 1.1em; border-radius: 20px; border: 1px solid rgba(0,0,0,0.1); box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);}
-    .search-container button { padding: 15px 25px; border-radius: 20px; font-size: 1.1em;}
+    /* ========== 播放器 ========== */
+    .player-wrapper { display: flex; flex-direction: column; gap: 10px; height: 100%;}
+    iframe { border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); flex: 1; min-height: 180px; }
+    
+    /* ========== 備忘錄 ========== */
     textarea { width: 100%; resize: none; min-height: 180px; box-sizing: border-box; background: rgba(255,255,255,0.6); line-height: 1.5; }
 
     /* ========== 右下角主題調色盤 ========== */
@@ -172,7 +201,10 @@
   <div class="container">
     <!-- 頂部：標題與時鐘 -->
     <header class="glass-card">
-      <h1 contenteditable="true" id="dashboard-title">追星用小網頁</h1>
+      <div class="title-container">
+        <h1 contenteditable="true" id="dashboard-title">追星用小網頁</h1>
+        <span class="edit-icon" onclick="document.getElementById('dashboard-title').focus()" title="點擊更改標題">✏️</span>
+      </div>
       <div class="timezone-widget">
         <div class="time-box">
           <span class="tz-label">台灣時間</span>
@@ -213,23 +245,26 @@
         </div>
       </section>
 
-      <!-- 3. 快速傳送門 -->
+      <!-- 3. 常用傳送門 (按鈕排版) -->
       <section class="card glass-card">
-        <h2>📌 常用書籤</h2>
-        <div class="list-container bookmark-grid" id="bookmark-list"></div>
-        <div class="add-action">
-          <input type="text" id="bm-name" placeholder="標題 (例: AO3)">
+        <h2>📌 常用傳送門</h2>
+        <div class="bookmark-wrapper" id="bookmark-list"></div>
+        <div class="add-action" style="margin-top: auto;">
+          <input type="text" id="bm-name" placeholder="標題">
           <input type="text" id="bm-url" placeholder="網址 (https://...)">
           <button id="add-bm-btn">新增</button>
         </div>
       </section>
 
-      <!-- 4. 快速搜尋 -->
+      <!-- 4. 音樂播放器 (可輸入網址更換) -->
       <section class="card glass-card">
-        <h2>🔍 快速前往</h2>
-        <div class="search-container">
-          <input type="text" id="search-input" placeholder="輸入要搜尋的內容，或直接貼上網址...">
-          <button id="search-btn">Go!</button>
+        <h2>🎵 陪伴播放器</h2>
+        <div class="player-wrapper">
+          <iframe id="yt-iframe" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+          <div class="add-action" style="padding-top: 5px;">
+            <input type="text" id="yt-input" placeholder="貼上 YouTube 影片網址來換歌...">
+            <button id="change-yt-btn">播放</button>
+          </div>
         </div>
       </section>
 
@@ -279,9 +314,7 @@
 
     function updateClocks() {
       const now = new Date();
-      // 台灣時間
       el('local-time').textContent = now.toLocaleTimeString('zh-TW', { hour12: false });
-      // 所選時區時間
       const otherTimeStr = new Intl.DateTimeFormat('zh-TW', {
         timeZone: tzSelect.value,
         hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
@@ -291,30 +324,32 @@
     setInterval(updateClocks, 1000);
     updateClocks();
 
-    /* ========== 4. 搜尋器 ========== */
-    const searchInput = el('search-input');
-    const searchBtn = el('search-btn');
-    function doSearch() {
-      let val = searchInput.value.trim();
-      if(!val) return;
-      // 判斷是否為網址，是的話直接跳轉，否則丟給 Google 搜尋
-      if(val.match(/^((http:\/\/|https:\/\/)?(www\.)?[a-zA-Z0-9-]+\.[a-zA-Z]{2,})/)) {
-        if(!val.startsWith('http')) val = 'https://' + val;
-        window.open(val, '_blank');
+    /* ========== 4. YouTube 播放器邏輯 ========== */
+    // 預設一首輕柔的 Lofi 音樂，如果有存過就用存過的
+    const defaultVideoId = 'jfKfPfyJRdk'; 
+    const savedVideoId = localStorage.getItem('ytVideoId') || defaultVideoId;
+    el('yt-iframe').src = `https://www.youtube.com/embed/${savedVideoId}`;
+
+    el('change-yt-btn').addEventListener('click', () => {
+      const url = el('yt-input').value;
+      // 擷取 YouTube 網址中的影片 ID
+      const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+      const match = url.match(regExp);
+      if (match && match[2].length === 11) {
+        const videoId = match[2];
+        el('yt-iframe').src = `https://www.youtube.com/embed/${videoId}`;
+        localStorage.setItem('ytVideoId', videoId);
+        el('yt-input').value = '';
       } else {
-        window.open(`https://www.google.com/search?q=${encodeURIComponent(val)}`, '_blank');
+        alert('哎呀！好像不是有效的 YouTube 網址喔，請重新確認一下！');
       }
-      searchInput.value = '';
-    }
-    searchBtn.addEventListener('click', doSearch);
-    searchInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') doSearch(); });
+    });
 
     /* ========== 5. 清單資料管理 (倒數、行程、書籤) ========== */
     let countdowns = load('countdowns', []);
     let schedules = load('schedules', []);
     let bookmarks = load('bookmarks', [
       { name: 'AO3', url: 'https://archiveofourown.org' },
-      { name: 'VLAST SHOP', url: 'https://vlastshop.com' },
       { name: 'Twitch', url: 'https://www.twitch.tv' },
       { name: 'YouTube', url: 'https://www.youtube.com' }
     ]);
@@ -362,14 +397,14 @@
         `);
       });
 
-      // 渲染書籤
+      // 渲染書籤 (膠囊按鈕排版)
       const bmContainer = el('bookmark-list');
       bmContainer.innerHTML = '';
       bookmarks.forEach((bm, i) => {
         bmContainer.insertAdjacentHTML('beforeend', `
-          <div class="item-row" style="margin-bottom:0;">
-            <a href="${bm.url}" target="_blank" class="bm-link">🔗 ${bm.name}</a>
-            <button class="delete-btn" onclick="deleteItem('bm', ${i})">x</button>
+          <div class="bm-pill">
+            <a href="${bm.url}" target="_blank" style="text-decoration:none; color:inherit;">🔗 ${bm.name}</a>
+            <button class="bm-del" onclick="deleteItem('bm', ${i})" title="刪除">×</button>
           </div>
         `);
       });
