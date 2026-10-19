@@ -515,19 +515,19 @@
         </div>
       </section>
 
-      <!-- 4. BGM 音樂播放器 (支援單曲、整個歌單與搜尋) -->
+      <!-- 4. BGM 音樂播放器 (強制網頁內嵌播放) -->
       <section class="glass-panel" style="display:flex; flex-direction:column;">
         <h2 class="card-header">🎵 BGM 音樂播放器</h2>
         <div class="player-box">
           <iframe id="yt-player" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
         </div>
         <div class="player-helper">
-          <span>💡 支援貼上 YouTube「單曲」或「整個播放清單 (Playlist)」網址！</span>
+          <span>💡 貼上 YouTube 影片或歌單網址，直接在網頁內開播！</span>
           <a id="yt-direct-link" href="https://music.youtube.com" target="_blank">🔗 前往原網址</a>
         </div>
         <div class="input-row">
-          <input type="text" id="yt-input" placeholder="貼上影片 / 播放清單網址，或輸入歌名搜尋...">
-          <button id="yt-load-btn">載入 / 搜尋</button>
+          <input type="text" id="yt-input" placeholder="貼上 YouTube 影片或歌單網址...">
+          <button id="yt-load-btn">直接播放</button>
         </div>
       </section>
 
@@ -701,13 +701,12 @@
 
     renderSchedules();
 
-    /* ========== 6. 常用書籤傳送門 (預設 Twitter, YouTube, Twitch) ========== */
+    /* ========== 6. 常用書籤傳送門 ========== */
     const defaultBookmarks = [
       { title: 'Twitter', url: 'https://twitter.com' },
       { title: 'YouTube', url: 'https://www.youtube.com' },
       { title: 'Twitch', url: 'https://www.twitch.tv' }
     ];
-    // 使用 v2 金鑰，確保直接顯示最新的這三個預設書籤
     let bookmarks = JSON.parse(localStorage.getItem('my_bookmarks_v2')) || defaultBookmarks;
 
     function renderBookmarks() {
@@ -742,7 +741,7 @@
 
     renderBookmarks();
 
-    /* ========== 7. BGM 音樂播放器 (支援單曲、整個歌單 Playlist 與搜尋) ========== */
+    /* ========== 7. BGM 音樂播放器 (強制網頁內嵌播放) ========== */
     const defaultMedia = {
       embedUrl: 'https://www.youtube.com/embed/jfKfPfyJRdk',
       watchUrl: 'https://www.youtube.com/watch?v=jfKfPfyJRdk'
@@ -759,17 +758,19 @@
       const val = $('yt-input').value.trim();
       if (!val) return;
 
-      // 同時偵測網址中的單曲 ID (v=...) 與播放清單 ID (list=...)
+      // 檢查是否包含 playlist (list=...)
       const listMatch = val.match(/[?&]list=([a-zA-Z0-9_-]+)/i);
+      // 檢查是否包含個別影片 ID (v=... 或 youtu.be/...)
       const vidMatch = val.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?|live)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i);
 
       if (listMatch && listMatch[1]) {
-        // 如果網址包含播放清單 (Playlist)
+        // 如果是歌單網址
         const listId = listMatch[1];
         const vidId = vidMatch && vidMatch[1] ? vidMatch[1] : null;
+        // 強制轉為網頁內嵌格式 (embed)
         const embedUrl = vidId
-          ? `https://www.youtube.com/embed/${vidId}?list=${listId}`
-          : `https://www.youtube.com/embed/videoseries?list=${listId}`;
+          ? `https://www.youtube.com/embed/${vidId}?list=${listId}&autoplay=1`
+          : `https://www.youtube.com/embed/videoseries?list=${listId}&autoplay=1`;
         const watchUrl = `https://www.youtube.com/playlist?list=${listId}`;
 
         currentMedia = { embedUrl, watchUrl };
@@ -777,23 +778,17 @@
         applyMedia(currentMedia);
         $('yt-input').value = '';
       } else if (vidMatch && vidMatch[1]) {
-        // 如果是單純的 YouTube 影片
+        // 如果是單曲影片網址
         const vidId = vidMatch[1];
-        currentMedia = {
-          embedUrl: `https://www.youtube.com/embed/${vidId}`,
-          watchUrl: `https://www.youtube.com/watch?v=${vidId}`
-        };
+        const embedUrl = `https://www.youtube.com/embed/${vidId}?autoplay=1`;
+        const watchUrl = `https://www.youtube.com/watch?v=${vidId}`;
+
+        currentMedia = { embedUrl, watchUrl };
         localStorage.setItem('saved_yt_media', JSON.stringify(currentMedia));
         applyMedia(currentMedia);
         $('yt-input').value = '';
-      } else if (/^https?:\/\//i.test(val)) {
-        // 其他音樂網站網址直接在新分頁開啟
-        window.open(val, '_blank');
-        $('yt-input').value = '';
       } else {
-        // 輸入一般文字則開啟 YouTube 搜尋
-        window.open(`https://www.youtube.com/results?search_query=${encodeURIComponent(val)}`, '_blank');
-        $('yt-input').value = '';
+        alert('哎呀！這好像不是有效的 YouTube 影片或歌單網址喔！請確認網址包含 youtube.com 或 youtu.be 喔～');
       }
     }
 
