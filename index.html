@@ -504,30 +504,30 @@
         </div>
       </section>
 
-      <!-- 3. 常用書籤 (第一版經典卡片樣式) -->
+      <!-- 3. 常用書籤 (預設 Twitter, YouTube, Twitch) -->
       <section class="glass-panel" style="display:flex; flex-direction:column;">
         <h2 class="card-header">📌 常用書籤傳送門</h2>
         <div class="bookmark-grid" id="bookmark-container"></div>
         <div class="input-row">
-          <input type="text" id="bm-input-title" placeholder="網站名稱 (例: AO3)">
+          <input type="text" id="bm-input-title" placeholder="網站名稱">
           <input type="text" id="bm-input-url" placeholder="網址 (https://...)">
           <button id="bm-add-btn">新增</button>
         </div>
       </section>
 
-      <!-- 4. BGM 音樂播放器 -->
+      <!-- 4. BGM 音樂播放器 (支援單曲、整個歌單與搜尋) -->
       <section class="glass-panel" style="display:flex; flex-direction:column;">
         <h2 class="card-header">🎵 BGM 音樂播放器</h2>
         <div class="player-box">
           <iframe id="yt-player" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
         </div>
         <div class="player-helper">
-          <span>💡 可貼上 YouTube 網址，或輸入歌名直接搜尋</span>
-          <a id="yt-direct-link" href="https://music.youtube.com" target="_blank">🔗 在 YouTube Music 開啟</a>
+          <span>💡 支援貼上 YouTube「單曲」或「整個播放清單 (Playlist)」網址！</span>
+          <a id="yt-direct-link" href="https://music.youtube.com" target="_blank">🔗 前往原網址</a>
         </div>
         <div class="input-row">
-          <input type="text" id="yt-input" placeholder="貼上 YouTube 網址，或輸入想搜尋的歌名...">
-          <button id="yt-load-btn">播放 / 搜尋</button>
+          <input type="text" id="yt-input" placeholder="貼上影片 / 播放清單網址，或輸入歌名搜尋...">
+          <button id="yt-load-btn">載入 / 搜尋</button>
         </div>
       </section>
 
@@ -701,16 +701,17 @@
 
     renderSchedules();
 
-    /* ========== 6. 常用書籤傳送門 (第一版經典卡片樣式) ========== */
-    let bookmarks = JSON.parse(localStorage.getItem('my_bookmarks')) || [
+    /* ========== 6. 常用書籤傳送門 (預設 Twitter, YouTube, Twitch) ========== */
+    const defaultBookmarks = [
+      { title: 'Twitter', url: 'https://twitter.com' },
       { title: 'YouTube', url: 'https://www.youtube.com' },
-      { title: 'Twitch 直播', url: 'https://www.twitch.tv' },
-      { title: 'Weverse', url: 'https://weverse.io' },
-      { title: 'AO3 創作庫', url: 'https://archiveofourown.org' }
+      { title: 'Twitch', url: 'https://www.twitch.tv' }
     ];
+    // 使用 v2 金鑰，確保直接顯示最新的這三個預設書籤
+    let bookmarks = JSON.parse(localStorage.getItem('my_bookmarks_v2')) || defaultBookmarks;
 
     function renderBookmarks() {
-      localStorage.setItem('my_bookmarks', JSON.stringify(bookmarks));
+      localStorage.setItem('my_bookmarks_v2', JSON.stringify(bookmarks));
       const container = $('bookmark-container');
       container.innerHTML = '';
 
@@ -741,36 +742,56 @@
 
     renderBookmarks();
 
-    /* ========== 7. BGM 音樂播放器 (支援網址播放與關鍵字搜尋) ========== */
-    // 預設使用無版權限制、允許外部嵌入播放的 Lofi Girl 直播台
-    const defaultVid = 'jfKfPfyJRdk';
-    let currentVid = localStorage.getItem('saved_yt_id') || defaultVid;
+    /* ========== 7. BGM 音樂播放器 (支援單曲、整個歌單 Playlist 與搜尋) ========== */
+    const defaultMedia = {
+      embedUrl: 'https://www.youtube.com/embed/jfKfPfyJRdk',
+      watchUrl: 'https://www.youtube.com/watch?v=jfKfPfyJRdk'
+    };
+    let currentMedia = JSON.parse(localStorage.getItem('saved_yt_media')) || defaultMedia;
 
-    function loadVideo(id) {
-      $('yt-player').src = `https://www.youtube.com/embed/${id}`;
-      $('yt-direct-link').href = `https://www.youtube.com/watch?v=${id}`;
+    function applyMedia(media) {
+      $('yt-player').src = media.embedUrl;
+      $('yt-direct-link').href = media.watchUrl;
     }
-    loadVideo(currentVid);
+    applyMedia(currentMedia);
 
     function handlePlayerInput() {
       const val = $('yt-input').value.trim();
       if (!val) return;
 
-      // 檢查是否為 YouTube 影片或播放清單網址
-      const ytRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?|live)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
-      const match = val.match(ytRegex);
+      // 同時偵測網址中的單曲 ID (v=...) 與播放清單 ID (list=...)
+      const listMatch = val.match(/[?&]list=([a-zA-Z0-9_-]+)/i);
+      const vidMatch = val.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?|live)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i);
 
-      if (match && match[1]) {
-        currentVid = match[1];
-        localStorage.setItem('saved_yt_id', currentVid);
-        loadVideo(currentVid);
+      if (listMatch && listMatch[1]) {
+        // 如果網址包含播放清單 (Playlist)
+        const listId = listMatch[1];
+        const vidId = vidMatch && vidMatch[1] ? vidMatch[1] : null;
+        const embedUrl = vidId
+          ? `https://www.youtube.com/embed/${vidId}?list=${listId}`
+          : `https://www.youtube.com/embed/videoseries?list=${listId}`;
+        const watchUrl = `https://www.youtube.com/playlist?list=${listId}`;
+
+        currentMedia = { embedUrl, watchUrl };
+        localStorage.setItem('saved_yt_media', JSON.stringify(currentMedia));
+        applyMedia(currentMedia);
+        $('yt-input').value = '';
+      } else if (vidMatch && vidMatch[1]) {
+        // 如果是單純的 YouTube 影片
+        const vidId = vidMatch[1];
+        currentMedia = {
+          embedUrl: `https://www.youtube.com/embed/${vidId}`,
+          watchUrl: `https://www.youtube.com/watch?v=${vidId}`
+        };
+        localStorage.setItem('saved_yt_media', JSON.stringify(currentMedia));
+        applyMedia(currentMedia);
         $('yt-input').value = '';
       } else if (/^https?:\/\//i.test(val)) {
-        // 如果是其他音樂網站的網址，直接幫使用者在新分頁打開
+        // 其他音樂網站網址直接在新分頁開啟
         window.open(val, '_blank');
         $('yt-input').value = '';
       } else {
-        // 如果輸入的是歌名或歌手關鍵字，直接打開 YouTube 搜尋結果
+        // 輸入一般文字則開啟 YouTube 搜尋
         window.open(`https://www.youtube.com/results?search_query=${encodeURIComponent(val)}`, '_blank');
         $('yt-input').value = '';
       }
