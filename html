@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>✨ My Personal Dashboard</title>
+    <!-- 引入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入 FontAwesome 圖示 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- 引入 Google Fonts (Quicksand 適合可愛風格，Noto Sans TC 適合中文) -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Quicksand', 'Noto Sans TC', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* 基礎設定與自訂背景變數 */
+        :root {
+            --bg-color: #f3e8ff; /* 預設粉彩紫 */
+        }
+        body {
+            background-color: var(--bg-color);
+            transition: background-color 0.5s ease;
+            background-image: radial-gradient(circle at top right, rgba(255,255,255,0.4) 0%, transparent 60%),
+                              radial-gradient(circle at bottom left, rgba(255,255,255,0.4) 0%, transparent 60%);
+            background-attachment: fixed;
+            min-height: 100vh;
+        }
+
+        /* 玻璃擬物化 (Glassmorphism) 卡片樣式 */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.45);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+        }
+
+        /* 自訂捲軸 */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        /* 隱藏原生 color picker 的外框 */
+        input[type="color"] {
+            -webkit-appearance: none;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            padding: 0;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        input[type="color"]::-webkit-color-swatch-wrapper {
+            padding: 0;
+        }
+        input[type="color"]::-webkit-color-swatch {
+            border: none;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body class="text-gray-800 p-4 md:p-8 font-sans">
+
+    <!-- 頂部導覽列 / 標題區 -->
+    <header class="glass-panel rounded-3xl p-4 md:p-6 mb-8 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div class="flex items-center gap-3">
+            <span class="text-3xl">✨</span>
+            <h1 class="text-2xl md:text-3xl font-bold text-gray-800 tracking-wide">My Dashboard</h1>
+        </div>
+
+        <!-- 雙時區時鐘 -->
+        <div class="flex gap-4 md:gap-8 bg-white/30 px-6 py-3 rounded-2xl border border-white/50">
+            <div class="text-center">
+                <p class="text-xs text-gray-500 font-bold mb-1">🇹🇼 台北 (TPE)</p>
+                <p id="clock-taipei" class="text-lg md:text-xl font-bold font-mono">00:00:00</p>
+            </div>
+            <div class="w-px bg-gray-300/50"></div>
+            <div class="text-center">
+                <p class="text-xs text-gray-500 font-bold mb-1">🇰🇷 首爾 (SEL)</p>
+                <p id="clock-seoul" class="text-lg md:text-xl font-bold font-mono">00:00:00</p>
+            </div>
+        </div>
+
+        <!-- 背景顏色選擇器 -->
+        <div class="flex items-center gap-3 bg-white/30 px-4 py-3 rounded-2xl border border-white/50">
+            <label for="bg-color-picker" class="text-sm font-bold text-gray-600">主題色</label>
+            <input type="color" id="bg-color-picker" value="#f3e8ff" title="更改背景顏色">
+        </div>
+    </header>
+
+    <!-- 主要內容區 (Grid Layout) -->
+    <main class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+
+        <!-- 左側欄位 -->
+        <div class="flex flex-col gap-6 md:gap-8">
+            
+            <!-- 1. 倒數計時器 -->
+            <section class="glass-panel rounded-3xl p-6 relative overflow-hidden">
+                <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-hourglass-half text-pink-400"></i> 重要倒數
+                </h2>
+                
+                <div id="countdown-display" class="text-center py-4">
+                    <h3 id="cd-title" class="text-lg font-bold text-gray-700 mb-3">載入中...</h3>
+                    <div class="flex justify-center gap-3 text-white">
+                        <div class="bg-pink-400/80 rounded-xl p-3 w-20 backdrop-blur-sm shadow-sm">
+                            <span id="cd-days" class="text-3xl font-bold block">0</span>
+                            <span class="text-xs">天</span>
+                        </div>
+                        <div class="bg-pink-400/80 rounded-xl p-3 w-16 backdrop-blur-sm shadow-sm">
+                            <span id="cd-hours" class="text-2xl font-bold block">0</span>
+                            <span class="text-xs">時</span>
+                        </div>
+                        <div class="bg-pink-400/80 rounded-xl p-3 w-16 backdrop-blur-sm shadow-sm">
+                            <span id="cd-mins" class="text-2xl font-bold block">0</span>
+                            <span class="text-xs">分</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 設定倒數按鈕與表單 -->
+                <button onclick="toggleCountdownForm()" class="mt-4 w-full py-2 bg-white/50 hover:bg-white/70 transition rounded-xl text-sm font-bold text-gray-600">
+                    <i class="fa-solid fa-pen mr-1"></i> 設定新目標
+                </button>
+                <div id="countdown-form" class="hidden mt-4 pt-4 border-t border-white/50">
+                    <input type="text" id="cd-input-title" placeholder="例如：班比生日" class="w-full mb-2 p-2 rounded-lg bg-white/50 border-none focus:ring-2 focus:ring-pink-300 outline-none text-sm">
+                    <input type="datetime-local" id="cd-input-date" class="w-full mb-2 p-2 rounded-lg bg-white/50 border-none focus:ring-2 focus:ring-pink-300 outline-none text-sm">
+                    <button onclick="saveCountdown()" class="w-full py-2 bg-pink-400 text-white rounded-xl text-sm font-bold shadow-md hover:bg-pink-500 transition">
+                        儲存
+                    </button>
+                </div>
+            </section>
+
+            <!-- 2. 行程表 -->
+            <section class="glass-panel rounded-3xl p-6 flex-1 flex flex-col">
+                <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+                    <i class="fa-regular fa-calendar-check text-purple-400"></i> 近期行程
+                </h2>
+                
+                <div class="flex-1 overflow-y-auto max-h-[300px] pr-2 mb-4" id="schedule-list">
+                    <!-- 行程項目會由 JS 動態生成 -->
+                </div>
+
+                <!-- 新增行程表單 -->
+                <div class="mt-auto border-t border-white/50 pt-4">
+                    <div class="flex gap-2 mb-2">
+                        <input type="text" id="schedule-title" placeholder="活動名稱 (例: T1 比賽)" class="flex-1 p-2 rounded-lg bg-white/50 outline-none focus:ring-2 focus:ring-purple-300 text-sm">
+                    </div>
+                    <div class="flex gap-2">
+                        <input type="datetime-local" id="schedule-date" class="flex-1 p-2 rounded-lg bg-white/50 outline-none focus:ring-2 focus:ring-purple-300 text-sm">
+                        <button onclick="addSchedule()" class="px-4 py-2 bg-purple-400 text-white rounded-xl hover:bg-purple-500 transition shadow-md">
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- 中間欄位 -->
+        <div class="flex flex-col gap-6 md:gap-8">
+            
+            <!-- 3. 快速備忘錄 -->
+            <section class="glass-panel rounded-3xl p-6 flex flex-col h-full min-h-[300px]">
+                <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-note-sticky text-yellow-400"></i> 快速備忘錄
+                </h2>
+                <textarea id="quick-notes" placeholder="今天有什麼靈感呢？寫下來吧！(會自動儲存喔✨)" 
+                    class="flex-1 w-full bg-white/40 rounded-2xl p-4 outline-none focus:ring-2 focus:ring-yellow-300 resize-none transition-all placeholder-gray-400 text-gray-700"></textarea>
+            </section>
+
+            <!-- 4. 書籤傳送門 -->
+            <section class="glass-panel rounded-3xl p-6">
+                <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-compass text-blue-400"></i> 傳送門
+                </h2>
+                
+                <div id="bookmark-list" class="grid grid-cols-2 gap-3 mb-4">
+                    <!-- 書籤會由 JS 動態生成 -->
+                </div>
+
+                <!-- 新增書籤表單 -->
+                <div class="border-t border-white/50 pt-4 flex flex-col gap-2">
+                    <input type="text" id="bm-title" placeholder="網站名稱 (例如: YouTube)" class="w-full p-2 rounded-lg bg-white/50 outline-none focus:ring-2 focus:ring-blue-300 text-sm">
+                    <div class="flex gap-2">
+                        <input type="url" id="bm-url" placeholder="網址 (https://...)" class="flex-1 p-2 rounded-lg bg-white/50 outline-none focus:ring-2 focus:ring-blue-300 text-sm">
+                        <button onclick="addBookmark()" class="px-4 py-2 bg-blue-400 text-white rounded-xl hover:bg-blue-500 transition shadow-md">
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- 右側欄位 -->
+        <div class="flex flex-col gap-6 md:gap-8">
+            
+            <!-- 5. 播放器 / 陪伴視窗 -->
+            <section class="glass-panel rounded-3xl p-6">
+                <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-headphones text-green-400"></i> BGM 播放器
+                </h2>
+                <div class="rounded-2xl overflow-hidden shadow-lg bg-black/5 aspect-video w-full">
+                    <!-- 嵌入 YouTube (預設放 Lofi Girl 直播當作背景音樂) -->
+                    <iframe 
+                        width="100%" 
+                        height="100%" 
+                        src="https://www.youtube.com/embed/jfKfPfyJRdk" 
+                        title="YouTube video player" 
+                        frameborder="0" 
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                        allowfullscreen>
+                    </iframe>
+                </div>
+                <p class="text-xs text-gray-500 mt-3 text-center">🎶 播放一點白噪音，陪伴你專心做事！</p>
+            </section>
+            
+            <!-- 簡單的裝飾或激勵小語 -->
+            <section class="glass-panel rounded-3xl p-6 text-center flex-1 flex flex-col justify-center">
+                <p class="text-2xl mb-2">🍀</p>
+                <p id="motivational-quote" class="text-gray-600 font-bold tracking-wide">
+                    今天也是充滿希望的一天！
+                </p>
+            </section>
+
+        </div>
+    </main>
+
+    <script>
+        /* =========================================
+           資料存取 Helpers
+        ========================================= */
+        const Storage = {
+            get: (key, defaultValue) => {
+                const data = localStorage.getItem(key);
+                return data ? JSON.parse(data) : defaultValue;
+            },
+            set: (key, value) => {
+                localStorage.setItem(key, JSON.stringify(value));
+            }
+        };
+
+        /* =========================================
+           預設資料 (首次載入時使用)
+        ========================================= */
+        const defaultData = {
+            bgColor: '#f3e8ff',
+            notes: '',
+            countdown: { title: 'T1 世界賽決賽', date: '2024-11-02T22:00' },
+            schedule: [
+                { id: 1, title: 'PLAVE 直播', date: '2024-10-31T19:00' },
+                { id: 2, title: '搶演唱會門票', date: '2024-11-15T12:00' }
+            ],
+            bookmarks: [
+                { id: 1, title: 'YouTube', url: 'https://youtube.com', icon: 'fa-youtube', color: 'text-red-500' },
+                { id: 2, title: 'Twitter (X)', url: 'https://twitter.com', icon: 'fa-twitter', color: 'text-blue-400' },
+                { id: 3, title: 'Twitch', url: 'https://twitch.tv', icon: 'fa-twitch', color: 'text-purple-500' },
+                { id: 4, title: 'GitHub', url: 'https://github.com', icon: 'fa-github', color: 'text-gray-800' }
+            ]
+        };
+
+        /* =========================================
+           1. 雙時區時鐘 (台北 & 首爾)
+        ========================================= */
+        function updateClocks() {
+            const now = new Date();
+            
+            // 台北時間 formatter (GMT+8)
+            const tpeFormatter = new Intl.DateTimeFormat('en-US', {
+                timeZone: 'Asia/Taipei', hour12: false,
+                hour: '2-digit', minute: '2-digit', second: '2-digit'
+            });
+            
+            // 首爾時間 formatter (GMT+9)
+            const selFormatter = new Intl.DateTimeFormat('en-US', {
+                timeZone: 'Asia/Seoul', hour12: false,
+                hour: '2-digit', minute: '2-digit', second: '2-digit'
+            });
+
+            document.getElementById('clock-taipei').innerText = tpeFormatter.format(now);
+            document.getElementById('clock-seoul').innerText = selFormatter.format(now);
+        }
+        setInterval(updateClocks, 1000);
+        updateClocks(); // 初始化立即執行
+
+        /* =========================================
+           2. 背景顏色控制
+        ========================================= */
+        const colorPicker = document.getElementById('bg-color-picker');
+        
+        function initTheme() {
+            const savedColor = Storage.get('dashboard_bgColor', defaultData.bgColor);
+            colorPicker.value = savedColor;
+            applyColor(savedColor);
+        }
+
+        function applyColor(hexColor) {
+            document.documentElement.style.setProperty('--bg-color', hexColor);
+        }
+
+        colorPicker.addEventListener('input', (e) => {
+            const newColor = e.target.value;
+            applyColor(newColor);
+            Storage.set('dashboard_bgColor', newColor);
+        });
+
+        /* =========================================
+           3. 倒數計時器
+        ========================================= */
+        let countdownInterval;
+
+        function initCountdown() {
+            const cdData = Storage.get('dashboard_countdown', defaultData.countdown);
+            document.getElementById('cd-title').innerText = cdData.title;
+            
+            if(countdownInterval) clearInterval(countdownInterval);
+            
+            countdownInterval = setInterval(() => {
+                const targetDate = new Date(cdData.date).getTime();
+                const now = new Date().getTime();
+                const diff = targetDate - now;
+
+                if (diff < 0) {
+                    document.getElementById('cd-days').innerText = "0";
+                    document.getElementById('cd-hours').innerText = "0";
+                    document.getElementById('cd-mins').innerText = "0";
+                    document.getElementById('cd-title').innerText = `${cdData.title} (已結束/已到達)`;
+                    clearInterval(countdownInterval);
+                    return;
+                }
+
+                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+                document.getElementById('cd-days').innerText = days;
+                document.getElementById('cd-hours').innerText = hours;
+                document.getElementById('cd-mins').innerText = mins;
+            }, 1000);
+        }
+
+        function toggleCountdownForm() {
+            const form = document.getElementById('countdown-form');
+            form.classList.toggle('hidden');
+        }
+
+        function saveCountdown() {
+            const title = document.getElementById('cd-input-title').value.trim();
+            const date = document.getElementById('cd-input-date').value;
+            
+            if(!title || !date) return; // 簡單防呆不提示 alert
+            
+            Storage.set('dashboard_countdown', { title, date });
+            toggleCountdownForm();
+            initCountdown();
+            
+            document.getElementById('cd-input-title').value = '';
+            document.getElementById('cd-input-date').value = '';
+        }
+
+        /* =========================================
+           4. 快速備忘錄 (自動儲存)
+        ========================================= */
+        const notesArea = document.getElementById('quick-notes');
+        
+        function initNotes() {
+            notesArea.value = Storage.get('dashboard_notes', defaultData.notes);
+        }
+
+        notesArea.addEventListener('input', () => {
+            Storage.set('dashboard_notes', notesArea.value);
+        });
+
+        /* =========================================
+           5. 傳送門 (書籤)
+        ========================================= */
+        function initBookmarks() {
+            renderBookmarks();
+        }
+
+        function getFavicon(url) {
+            // 利用 Google 的 favicon 服務抓取 icon
+            try {
+                const domain = new URL(url).hostname;
+                return `https://www.google.com/s2/favicons?domain=${domain}&sz=32`;
+            } catch(e) {
+                return ''; // 無效 URL
+            }
+        }
+
+        function renderBookmarks() {
+            const bookmarks = Storage.get('dashboard_bookmarks', defaultData.bookmarks);
+            const listElement = document.getElementById('bookmark-list');
+            listElement.innerHTML = '';
+
+            bookmarks.forEach(bm => {
+                const item = document.createElement('div');
+                item.className = "group relative flex items-center bg-white/50 hover:bg-white/80 p-3 rounded-xl transition shadow-sm border border-white/60";
+                
+                // 判斷要用 fontawesome 還是網站圖示
+                let iconHtml = bm.icon 
+                    ? `<i class="fa-brands ${bm.icon} ${bm.color} text-xl w-6"></i>` 
+                    : `<img src="${getFavicon(bm.url)}" class="w-5 h-5 mr-1" onerror="this.style.display='none'">`;
+
+                item.innerHTML = `
+                    <a href="${bm.url}" target="_blank" class="flex-1 flex items-center gap-2 overflow-hidden">
+                        ${iconHtml}
+                        <span class="text-sm font-bold text-gray-700 truncate">${bm.title}</span>
+                    </a>
+                    <button onclick="deleteBookmark(${bm.id})" class="absolute right-2 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                `;
+                listElement.appendChild(item);
+            });
+        }
+
+        function addBookmark() {
+            const title = document.getElementById('bm-title').value.trim();
+            const urlInput = document.getElementById('bm-url').value.trim();
+            
+            if(!title || !urlInput) return;
+
+            // 確保網址有 http/https
+            let url = urlInput;
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                url = 'https://' + url;
+            }
+
+            const bookmarks = Storage.get('dashboard_bookmarks', defaultData.bookmarks);
+            const newBm = {
+                id: Date.now(),
+                title: title,
+                url: url
+            };
+            
+            bookmarks.push(newBm);
+            Storage.set('dashboard_bookmarks', bookmarks);
+            renderBookmarks();
+
+            document.getElementById('bm-title').value = '';
+            document.getElementById('bm-url').value = '';
+        }
+
+        function deleteBookmark(id) {
+            let bookmarks = Storage.get('dashboard_bookmarks', defaultData.bookmarks);
+            bookmarks = bookmarks.filter(bm => bm.id !== id);
+            Storage.set('dashboard_bookmarks', bookmarks);
+            renderBookmarks();
+        }
+
+        /* =========================================
+           6. 近期行程表
+        ========================================= */
+        function initSchedule() {
+            renderSchedule();
+        }
+
+        function renderSchedule() {
+            const scheduleList = Storage.get('dashboard_schedule', defaultData.schedule);
+            const container = document.getElementById('schedule-list');
+            container.innerHTML = '';
+
+            // 依照時間排序 (近的在上面)
+            scheduleList.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+            if(scheduleList.length === 0) {
+                container.innerHTML = '<p class="text-gray-400 text-sm text-center py-4">目前沒有行程喔！</p>';
+                return;
+            }
+
+            scheduleList.forEach(item => {
+                const dateObj = new Date(item.date);
+                const isPast = dateObj < new Date();
+                
+                // 格式化日期：10/31 19:00
+                const dateStr = `${dateObj.getMonth()+1}/${dateObj.getDate()} ${dateObj.getHours().toString().padStart(2,'0')}:${dateObj.getMinutes().toString().padStart(2,'0')}`;
+
+                const div = document.createElement('div');
+                div.className = `group flex items-center justify-between p-3 mb-2 rounded-xl bg-white/40 border ${isPast ? 'border-gray-200 opacity-50' : 'border-white/60'} hover:bg-white/60 transition`;
+                
+                div.innerHTML = `
+                    <div class="flex flex-col">
+                        <span class="text-sm font-bold ${isPast ? 'text-gray-500 line-through' : 'text-gray-800'}">${item.title}</span>
+                        <span class="text-xs text-gray-500"><i class="fa-regular fa-clock mr-1"></i>${dateStr}</span>
+                    </div>
+                    <button onclick="deleteSchedule(${item.id})" class="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition p-1">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function addSchedule() {
+            const title = document.getElementById('schedule-title').value.trim();
+            const date = document.getElementById('schedule-date').value;
+            
+            if(!title || !date) return;
+
+            const scheduleList = Storage.get('dashboard_schedule', defaultData.schedule);
+            scheduleList.push({
+                id: Date.now(),
+                title: title,
+                date: date
+            });
+
+            Storage.set('dashboard_schedule', scheduleList);
+            renderSchedule();
+
+            document.getElementById('schedule-title').value = '';
+            document.getElementById('schedule-date').value = '';
+        }
+
+        function deleteSchedule(id) {
+            let scheduleList = Storage.get('dashboard_schedule', defaultData.schedule);
+            scheduleList = scheduleList.filter(item => item.id !== id);
+            Storage.set('dashboard_schedule', scheduleList);
+            renderSchedule();
+        }
+
+        /* =========================================
+           隨機小語 (增加趣味性)
+        ========================================= */
+        const quotes = [
+            "今天也是充滿希望的一天！",
+            "記得喝水、伸展一下身體喔！🥤",
+            "辛苦了！休息一下聽首歌吧 🎵",
+            "推角的笑容由你來守護！✨",
+            "慢慢來，比較快 🐢",
+            "準備好迎接週末的比賽了嗎？🎮"
+        ];
+        document.getElementById('motivational-quote').innerText = quotes[Math.floor(Math.random() * quotes.length)];
+
+
+        /* =========================================
+           初始化執行
+        ========================================= */
+        document.addEventListener('DOMContentLoaded', () => {
+            initTheme();
+            initCountdown();
+            initNotes();
+            initBookmarks();
+            initSchedule();
+        });
+
+    </script>
+</body>
+</html>
