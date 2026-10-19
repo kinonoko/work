@@ -164,3 +164,255 @@
 
     @media (max-width: 768px) {
       .timezone-widget { width: 100%; justify-content: space-between; }
+      .time-box { flex: 1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- 頂部：標題與時鐘 -->
+    <header class="glass-card">
+      <h1 contenteditable="true" id="dashboard-title">追星用小網頁</h1>
+      <div class="timezone-widget">
+        <div class="time-box">
+          <span class="tz-label">台灣時間</span>
+          <span class="tz-time" id="local-time">00:00:00</span>
+        </div>
+        <div class="time-box">
+          <select id="tz-select" class="tz-select">
+            <option value="Asia/Seoul">韓國時間 (KST)</option>
+            <option value="Asia/Tokyo">日本時間 (JST)</option>
+            <option value="America/New_York">美東時間 (EST)</option>
+            <option value="Europe/London">英國時間 (GMT)</option>
+          </select>
+          <span class="tz-time" id="other-time">00:00:00</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="grid">
+      <!-- 1. 倒數計時 -->
+      <section class="card glass-card">
+        <h2>🎂 重要倒數</h2>
+        <div class="list-container" id="countdown-list"></div>
+        <div class="add-action">
+          <input type="text" id="cd-name" placeholder="加入重要日期">
+          <input type="date" id="cd-date">
+          <button id="add-cd-btn">新增</button>
+        </div>
+      </section>
+
+      <!-- 2. 行程與賽事 -->
+      <section class="card glass-card">
+        <h2>📅 行程與賽事</h2>
+        <div class="list-container" id="schedule-list"></div>
+        <div class="add-action">
+          <input type="text" id="sch-name" placeholder="例如: T1 轉播 / PLAVE 直播">
+          <input type="datetime-local" id="sch-date">
+          <button id="add-sch-btn">新增</button>
+        </div>
+      </section>
+
+      <!-- 3. 快速傳送門 -->
+      <section class="card glass-card">
+        <h2>📌 常用書籤</h2>
+        <div class="list-container bookmark-grid" id="bookmark-list"></div>
+        <div class="add-action">
+          <input type="text" id="bm-name" placeholder="標題 (例: AO3)">
+          <input type="text" id="bm-url" placeholder="網址 (https://...)">
+          <button id="add-bm-btn">新增</button>
+        </div>
+      </section>
+
+      <!-- 4. 快速搜尋 -->
+      <section class="card glass-card">
+        <h2>🔍 快速前往</h2>
+        <div class="search-container">
+          <input type="text" id="search-input" placeholder="輸入要搜尋的內容，或直接貼上網址...">
+          <button id="search-btn">Go!</button>
+        </div>
+      </section>
+
+      <!-- 5. 隨手記 -->
+      <section class="card glass-card" style="grid-column: 1 / -1;">
+        <h2>📝 靈感與備忘錄</h2>
+        <textarea id="quick-note" placeholder="記錄一下突然冒出的腦洞、日文報告的想法，或是想買的清單吧..."></textarea>
+      </section>
+    </div>
+
+    <!-- 右下角背景顏色控制 -->
+    <div class="theme-picker">
+      <label for="bg-color" style="font-weight:bold; color:#555;">🎨 背景色</label>
+      <input type="color" id="bg-color" value="#fdf6e3">
+    </div>
+  </div>
+
+  <script>
+    /* ========== 共用功能 ========== */
+    const el = (id) => document.getElementById(id);
+    const save = (key, data) => localStorage.setItem(key, JSON.stringify(data));
+    const load = (key, defaultVal) => JSON.parse(localStorage.getItem(key)) || defaultVal;
+
+    /* ========== 1. 標題與備忘錄自動儲存 ========== */
+    const titleEl = el('dashboard-title');
+    titleEl.textContent = localStorage.getItem('dashTitle') || '追星用小網頁';
+    titleEl.addEventListener('blur', () => localStorage.setItem('dashTitle', titleEl.textContent));
+
+    const noteEl = el('quick-note');
+    noteEl.value = localStorage.getItem('quickNote') || '';
+    noteEl.addEventListener('input', () => localStorage.setItem('quickNote', noteEl.value));
+
+    /* ========== 2. 背景顏色控制 ========== */
+    const colorPicker = el('bg-color');
+    const savedColor = localStorage.getItem('bgColor') || '#fdf6e3';
+    colorPicker.value = savedColor;
+    document.documentElement.style.setProperty('--bg-color', savedColor);
+    colorPicker.addEventListener('input', (e) => {
+      document.documentElement.style.setProperty('--bg-color', e.target.value);
+      localStorage.setItem('bgColor', e.target.value);
+    });
+
+    /* ========== 3. 雙時區時鐘 ========== */
+    const tzSelect = el('tz-select');
+    tzSelect.value = localStorage.getItem('selectedTz') || 'Asia/Seoul';
+    tzSelect.addEventListener('change', (e) => localStorage.setItem('selectedTz', e.target.value));
+
+    function updateClocks() {
+      const now = new Date();
+      // 台灣時間
+      el('local-time').textContent = now.toLocaleTimeString('zh-TW', { hour12: false });
+      // 所選時區時間
+      const otherTimeStr = new Intl.DateTimeFormat('zh-TW', {
+        timeZone: tzSelect.value,
+        hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+      }).format(now);
+      el('other-time').textContent = otherTimeStr;
+    }
+    setInterval(updateClocks, 1000);
+    updateClocks();
+
+    /* ========== 4. 搜尋器 ========== */
+    const searchInput = el('search-input');
+    const searchBtn = el('search-btn');
+    function doSearch() {
+      let val = searchInput.value.trim();
+      if(!val) return;
+      // 判斷是否為網址，是的話直接跳轉，否則丟給 Google 搜尋
+      if(val.match(/^((http:\/\/|https:\/\/)?(www\.)?[a-zA-Z0-9-]+\.[a-zA-Z]{2,})/)) {
+        if(!val.startsWith('http')) val = 'https://' + val;
+        window.open(val, '_blank');
+      } else {
+        window.open(`https://www.google.com/search?q=${encodeURIComponent(val)}`, '_blank');
+      }
+      searchInput.value = '';
+    }
+    searchBtn.addEventListener('click', doSearch);
+    searchInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') doSearch(); });
+
+    /* ========== 5. 清單資料管理 (倒數、行程、書籤) ========== */
+    let countdowns = load('countdowns', []);
+    let schedules = load('schedules', []);
+    let bookmarks = load('bookmarks', [
+      { name: 'AO3', url: 'https://archiveofourown.org' },
+      { name: 'VLAST SHOP', url: 'https://vlastshop.com' },
+      { name: 'Twitch', url: 'https://www.twitch.tv' },
+      { name: 'YouTube', url: 'https://www.youtube.com' }
+    ]);
+
+    function refreshAllLists() {
+      save('countdowns', countdowns);
+      save('schedules', schedules);
+      save('bookmarks', bookmarks);
+
+      // 渲染倒數計時
+      const cdContainer = el('countdown-list');
+      cdContainer.innerHTML = '';
+      const today = new Date();
+      today.setHours(0,0,0,0);
+      countdowns.sort((a,b) => new Date(a.date) - new Date(b.date)).forEach((cd, i) => {
+        const targetDate = new Date(cd.date);
+        const diffDays = Math.ceil((targetDate - today) / (1000 * 60 * 60 * 24));
+        let text = diffDays > 0 ? `還有 ${diffDays} 天` : diffDays === 0 ? '就是今天！🎉' : `已過 ${Math.abs(diffDays)} 天`;
+        
+        cdContainer.insertAdjacentHTML('beforeend', `
+          <div class="item-row">
+            <span>${cd.name}</span>
+            <div>
+              <span class="cd-days">${text}</span>
+              <button class="delete-btn" onclick="deleteItem('cd', ${i})">刪除</button>
+            </div>
+          </div>
+        `);
+      });
+
+      // 渲染行程表
+      const schContainer = el('schedule-list');
+      schContainer.innerHTML = '';
+      schedules.sort((a,b) => new Date(a.date) - new Date(b.date)).forEach((sch, i) => {
+        const d = new Date(sch.date);
+        const timeStr = d.toLocaleString('zh-TW', {month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit', hour12: false});
+        schContainer.insertAdjacentHTML('beforeend', `
+          <div class="item-row">
+            <div>
+              <strong>${sch.name}</strong><br>
+              <small style="color:#666;">${timeStr}</small>
+            </div>
+            <button class="delete-btn" onclick="deleteItem('sch', ${i})">刪除</button>
+          </div>
+        `);
+      });
+
+      // 渲染書籤
+      const bmContainer = el('bookmark-list');
+      bmContainer.innerHTML = '';
+      bookmarks.forEach((bm, i) => {
+        bmContainer.insertAdjacentHTML('beforeend', `
+          <div class="item-row" style="margin-bottom:0;">
+            <a href="${bm.url}" target="_blank" class="bm-link">🔗 ${bm.name}</a>
+            <button class="delete-btn" onclick="deleteItem('bm', ${i})">x</button>
+          </div>
+        `);
+      });
+    }
+
+    window.deleteItem = function(type, index) {
+      if(type === 'cd') countdowns.splice(index, 1);
+      if(type === 'sch') schedules.splice(index, 1);
+      if(type === 'bm') bookmarks.splice(index, 1);
+      refreshAllLists();
+    }
+
+    /* 新增按鈕事件 */
+    el('add-cd-btn').addEventListener('click', () => {
+      const name = el('cd-name').value || '加入重要日期';
+      const date = el('cd-date').value;
+      if(!date) return alert('請選擇日期喔！');
+      countdowns.push({name, date});
+      el('cd-name').value = ''; el('cd-date').value = '';
+      refreshAllLists();
+    });
+
+    el('add-sch-btn').addEventListener('click', () => {
+      const name = el('sch-name').value;
+      const date = el('sch-date').value;
+      if(!name || !date) return alert('名稱和時間都要填寫喔！');
+      schedules.push({name, date});
+      el('sch-name').value = ''; el('sch-date').value = '';
+      refreshAllLists();
+    });
+
+    el('add-bm-btn').addEventListener('click', () => {
+      const name = el('bm-name').value;
+      let url = el('bm-url').value;
+      if(!name || !url) return alert('名稱和網址都要填寫喔！');
+      if(!url.startsWith('http')) url = 'https://' + url;
+      bookmarks.push({name, url});
+      el('bm-name').value = ''; el('bm-url').value = '';
+      refreshAllLists();
+    });
+
+    // 初始化渲染
+    refreshAllLists();
+  </script>
+</body>
+</html>
